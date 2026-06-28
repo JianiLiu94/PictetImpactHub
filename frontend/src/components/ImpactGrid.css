@@ -1,28 +1,58 @@
+.impact-grid-scroll {
+  overflow-x: auto;
+}
+
 .impact-grid {
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  font-size: 10.5px;
 }
 
 .impact-grid__cell {
-  padding: 6px;
+  padding: 5px 4px;
   text-align: center;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.impact-grid__cell--head {
+  background: none;
+  color: var(--ink-muted, #5f6b66);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 10px;
+  text-align: left;
+  padding: 5px 4px;
 }
 
 .impact-grid__cell--no-data {
-  background-color: #e0e0e0;
-  color: #888;
+  background-color: var(--line-soft, #eef0ed);
+  color: var(--ink-faint, #9aa39e);
 }
 
 .impact-grid__cell--positive {
-  background-color: #cdeccd;
+  background-color: var(--bio-soft, #cdeccd);
 }
 
 .impact-grid__cell--negative {
-  background-color: #f5cccc;
+  background-color: var(--social-soft, #f5cccc);
 }
 
 .impact-grid__cell--zero {
-  background-color: #f0f0f0;
+  background-color: var(--line-soft, #eef0ed);
+}
+
+.impact-grid__cell--agg {
+  font-weight: 600;
+}
+
+.impact-grid__cell--agg-sep {
+  border-left: 1px solid var(--line);
+}
+
+.impact-grid__cell--agg-sep-top {
+  border-top: 1px solid var(--line);
 }

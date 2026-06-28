@@ -49,6 +49,26 @@ export interface ScoreOut {
   biodiversity_score: number;
 }
 
+export interface CategoryValue {
+  category: string;
+  value: number;
+}
+
+export interface CategoryBreakdown {
+  social: CategoryValue[];
+  biodiversity: CategoryValue[];
+}
+
+export interface ScopeValue {
+  scope: string;
+  value: number;
+}
+
+export interface ScopeBreakdown {
+  social: ScopeValue[];
+  biodiversity: ScopeValue[];
+}
+
 export interface Page<T> {
   items: T[];
   total: number;

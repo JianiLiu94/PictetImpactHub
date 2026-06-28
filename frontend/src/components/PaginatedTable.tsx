@@ -33,7 +33,7 @@ export function PaginatedTable<T>({
 
   return (
     <div>
-      <table>
+      <table className="data-table">
         <thead>
           <tr>
             {columns.map((col) => (
@@ -51,7 +51,7 @@ export function PaginatedTable<T>({
           ))}
         </tbody>
       </table>
-      <div>
+      <div className="pager">
         <button onClick={() => goTo(page - 1)} disabled={page === 0}>
           Previous
         </button>

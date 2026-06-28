@@ -1,10 +1,12 @@
 import type {
+  CategoryBreakdown,
   CompanyDetail,
   CompanySummary,
   HoldingOut,
   Page,
   PortfolioDetail,
   PortfolioSummary,
+  ScopeBreakdown,
   ScoreOut,
 } from "../types";
 
@@ -22,6 +24,8 @@ export const api = {
   listPortfolios: (limit?: number, offset = 0) =>
     request<Page<PortfolioSummary>>(`/portfolios?${limit ? `limit=${limit}&` : ""}offset=${offset}`),
   getPortfolio: (id: number) => request<PortfolioDetail>(`/portfolios/${id}`),
+  getPortfolioCategories: (id: number) => request<CategoryBreakdown>(`/portfolios/${id}/categories`),
+  getPortfolioScopes: (id: number) => request<ScopeBreakdown>(`/portfolios/${id}/scopes`),
   getPortfolioCompanies: (id: number, limit?: number, offset = 0) =>
     request<Page<HoldingOut>>(`/portfolios/${id}/companies?${limit ? `limit=${limit}&` : ""}offset=${offset}`),
   comparePortfolios: (ids: number[]) =>
