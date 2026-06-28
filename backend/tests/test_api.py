@@ -124,3 +124,8 @@ def test_compare_portfolios(client_with_portfolio):
     body = response.json()
     assert len(body) == 1
     assert body[0]["id"] == 1
+
+
+def test_compare_portfolios_invalid_ids(client_with_portfolio):
+    response = client_with_portfolio.get("/portfolios/compare", params={"ids": "1,abc"})
+    assert response.status_code == 422

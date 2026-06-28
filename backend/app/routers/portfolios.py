@@ -52,6 +52,16 @@ def _get_portfolio_or_404(db: Session, portfolio_id: int) -> Portfolio:
     return portfolio
 
 
+def _build_portfolio_detail(db: Session, portfolio: Portfolio, holdings: list[dict]) -> PortfolioDetail:
+    return PortfolioDetail(
+        id=portfolio.id,
+        name=portfolio.name,
+        n_companies=len(holdings),
+        total_market_value=sum(h["market_value"] or 0.0 for h in holdings),
+        impact=_portfolio_impact(db, holdings),
+    )
+
+
 @router.get("", response_model=Page[PortfolioSummary])
 def list_portfolios(
     limit: int | None = Query(default=None, ge=0),
@@ -78,18 +88,15 @@ def list_portfolios(
 
 @router.get("/compare", response_model=list[PortfolioDetail])
 def compare_portfolios(ids: str, db: Session = Depends(get_db)):
-    portfolio_ids = [int(x) for x in ids.split(",") if x.strip()]
+    try:
+        portfolio_ids = [int(x) for x in ids.split(",") if x.strip()]
+    except ValueError:
+        raise HTTPException(status_code=422, detail="ids must be a comma-separated list of integers")
     results = []
     for portfolio_id in portfolio_ids:
         portfolio = _get_portfolio_or_404(db, portfolio_id)
         holdings = _portfolio_holdings(db, portfolio_id)
-        results.append(PortfolioDetail(
-            id=portfolio.id,
-            name=portfolio.name,
-            n_companies=len(holdings),
-            total_market_value=sum(h["market_value"] or 0.0 for h in holdings),
-            impact=_portfolio_impact(db, holdings),
-        ))
+        results.append(_build_portfolio_detail(db, portfolio, holdings))
     return results
 
 
@@ -97,13 +104,7 @@ def compare_portfolios(ids: str, db: Session = Depends(get_db)):
 def get_portfolio(portfolio_id: int, db: Session = Depends(get_db)):
     portfolio = _get_portfolio_or_404(db, portfolio_id)
     holdings = _portfolio_holdings(db, portfolio_id)
-    return PortfolioDetail(
-        id=portfolio.id,
-        name=portfolio.name,
-        n_companies=len(holdings),
-        total_market_value=sum(h["market_value"] or 0.0 for h in holdings),
-        impact=_portfolio_impact(db, holdings),
-    )
+    return _build_portfolio_detail(db, portfolio, holdings)
 
 
 @router.get("/{portfolio_id}/companies", response_model=Page[HoldingOut])
