@@ -61,3 +61,23 @@ class ScoreOut(BaseModel):
     name: str
     social_score: float
     biodiversity_score: float
+
+
+class CategoryValue(BaseModel):
+    category: str
+    value: float
+
+
+class CategoryBreakdown(BaseModel):
+    social: list[CategoryValue]
+    biodiversity: list[CategoryValue]
+
+
+class ScopeValue(BaseModel):
+    scope: str
+    value: float
+
+
+class ScopeBreakdown(BaseModel):
+    social: list[ScopeValue]
+    biodiversity: list[ScopeValue]

@@ -139,3 +139,48 @@ def test_get_company_scores(client_with_portfolio):
     assert tickers == {"ABC", "XYZ"}
     abc_score = next(item for item in body["items"] if item["entity_id"] == "ABC")
     assert abc_score["social_score"] == 100.0  # only ABC has social impact, so it ranks highest
+
+
+def test_get_portfolio_categories(client_with_portfolio):
+    response = client_with_portfolio.get("/portfolios/1/categories")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert len(body["social"]) == 12
+    assert len(body["biodiversity"]) == 5
+
+    # sorted high to low
+    social_values = [c["value"] for c in body["social"]]
+    assert social_values == sorted(social_values, reverse=True)
+    bio_values = [c["value"] for c in body["biodiversity"]]
+    assert bio_values == sorted(bio_values, reverse=True)
+
+    health = next(c for c in body["social"] if c["category"] == "health")
+    assert health["value"] == 0.6 * 5.0
+    other_social = next(c for c in body["social"] if c["category"] != "health")
+    assert other_social["value"] == 0.0
+
+    climate = next(c for c in body["biodiversity"] if c["category"] == "climate_change")
+    assert climate["value"] == 0.6 * -2.0
+
+
+def test_get_portfolio_scopes(client_with_portfolio):
+    response = client_with_portfolio.get("/portfolios/1/scopes")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert len(body["social"]) == 3
+    assert len(body["biodiversity"]) == 3
+
+    # fixed canonical order: upstream -> own operations/direct -> downstream,
+    # not sorted by value, so the two models' scope positions stay aligned
+    assert [s["scope"] for s in body["social"]] == ["upstream", "own_ops", "downstream"]
+    assert [s["scope"] for s in body["biodiversity"]] == ["upstream", "direct", "downstream"]
+
+    upstream = next(s for s in body["social"] if s["scope"] == "upstream")
+    assert upstream["value"] == 0.6 * 5.0
+    other_social = next(s for s in body["social"] if s["scope"] != "upstream")
+    assert other_social["value"] == 0.0
+
+    direct = next(s for s in body["biodiversity"] if s["scope"] == "direct")
+    assert direct["value"] == 0.6 * -2.0

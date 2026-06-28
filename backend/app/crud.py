@@ -7,7 +7,7 @@ SOCIAL_CATEGORIES = [
 ]
 SOCIAL_STAKEHOLDERS = ["customers", "employees", "gov_communities", "shareholders", "suppliers"]
 
-BIO_SCOPES = ["direct", "upstream", "downstream"]
+BIO_SCOPES = ["upstream", "direct", "downstream"]
 BIO_CATEGORIES = ["acidification", "climate_change", "eutrophication", "land_use", "water_stress"]
 
 
