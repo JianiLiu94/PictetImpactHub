@@ -23,6 +23,10 @@ export function CompanyDetail() {
 
   const ownScore = scores.filter((s) => s.entity_id === ticker);
 
+  const stakeholders = Array.from(
+    new Set(company.social_grid.map((c) => c.stakeholder).filter((s): s is string => s !== null))
+  );
+
   return (
     <div>
       <h1>{company.company_name}</h1>
@@ -31,13 +35,22 @@ export function CompanyDetail() {
       <p>Revenue: ${company.sales_usd_m?.toLocaleString() ?? "-"}M</p>
 
       <h2>Social impact (scope x category)</h2>
-      <ImpactGrid cells={company.social_grid} rowKeyField="scope" colKeyField="category" />
+      {stakeholders.map((stakeholder) => (
+        <div key={stakeholder}>
+          <h3>{stakeholder}</h3>
+          <ImpactGrid
+            cells={company.social_grid.filter((c) => c.stakeholder === stakeholder)}
+            rowKeyField="scope"
+            colKeyField="category"
+          />
+        </div>
+      ))}
 
       <h2>Biodiversity impact (scope x category)</h2>
       <ImpactGrid cells={company.biodiversity_grid} rowKeyField="scope" colKeyField="category" />
 
       <h2>Composite score</h2>
-      <ScoreToggle scores={ownScore.length > 0 ? scores : []} />
+      <ScoreToggle scores={ownScore} />
     </div>
   );
 }
