@@ -24,27 +24,32 @@ def _read_csv(filename: str) -> pd.DataFrame:
     return df
 
 
-def seed_companies(db: Session) -> None:
+def seed_companies(db: Session) -> set:
     fin = _read_csv("financial_data.csv")
     bad_rows = 0
+    seeded_tickers = set()
     for _, row in fin.iterrows():
         if pd.isna(row.get("ticker")) or pd.isna(row.get("isin")):
             bad_rows += 1
             continue
+        company_name = row.get("company_name")
+        company_name = "" if pd.isna(company_name) else company_name
         db.merge(
             Company(
                 ticker=str(row["ticker"]),
-                company_name=row.get("company_name", ""),
+                company_name=company_name,
                 isin=row["isin"],
                 market_cap_usd_m=row.get("market_cap_usd_m"),
                 sales_usd_m=row.get("sales_usd_m"),
             )
         )
+        seeded_tickers.add(str(row["ticker"]))
     db.commit()
     print(f"companies: seeded {len(fin) - bad_rows}, skipped {bad_rows}")
+    return seeded_tickers
 
 
-def seed_portfolios_and_holdings(db: Session) -> None:
+def seed_portfolios_and_holdings(db: Session, known_tickers: set) -> None:
     holdings = _read_csv("port_holdings_combined_assumed.csv")
     portfolio_names = holdings["portfolio"].dropna().unique().tolist()
     name_to_id = {}
@@ -54,9 +59,13 @@ def seed_portfolios_and_holdings(db: Session) -> None:
         name_to_id[name] = portfolio.id
     db.commit()
 
+    required_fields = ["ticker", "portfolio", "pct_of_fund"]
     bad_rows = 0
     for _, row in holdings.iterrows():
-        if pd.isna(row.get("ticker")) or pd.isna(row.get("portfolio")):
+        if any(pd.isna(row.get(field)) for field in required_fields):
+            bad_rows += 1
+            continue
+        if str(row["ticker"]) not in known_tickers or row["portfolio"] not in name_to_id:
             bad_rows += 1
             continue
         db.add(
@@ -74,11 +83,22 @@ def seed_portfolios_and_holdings(db: Session) -> None:
     print(f"holdings: seeded {len(holdings) - bad_rows}, skipped {bad_rows}")
 
 
-def seed_social_impact(db: Session) -> None:
+def seed_social_impact(db: Session, known_tickers: set) -> None:
     social = _read_csv("social_impact_model_output_assumed.csv")
+    required_fields = [
+        "ticker",
+        "scope",
+        "category",
+        "stakeholder",
+        "wellby_per_dollar",
+        "wellby_abs",
+    ]
     bad_rows = 0
     for _, row in social.iterrows():
-        if pd.isna(row.get("ticker")):
+        if any(pd.isna(row.get(field)) for field in required_fields):
+            bad_rows += 1
+            continue
+        if str(row["ticker"]) not in known_tickers:
             bad_rows += 1
             continue
         db.add(
@@ -95,11 +115,15 @@ def seed_social_impact(db: Session) -> None:
     print(f"social_impact: seeded {len(social) - bad_rows}, skipped {bad_rows}")
 
 
-def seed_biodiversity_impact(db: Session) -> None:
+def seed_biodiversity_impact(db: Session, known_tickers: set) -> None:
     bio = _read_csv("biodiversity_model_output.csv")
+    required_fields = ["ticker", "scope", "category", "value"]
     bad_rows = 0
     for _, row in bio.iterrows():
-        if pd.isna(row.get("ticker")):
+        if any(pd.isna(row.get(field)) for field in required_fields):
+            bad_rows += 1
+            continue
+        if str(row["ticker"]) not in known_tickers:
             bad_rows += 1
             continue
         db.add(
@@ -122,10 +146,10 @@ def main() -> None:
             db.query(table).delete()
         db.commit()
 
-        seed_companies(db)
-        seed_portfolios_and_holdings(db)
-        seed_social_impact(db)
-        seed_biodiversity_impact(db)
+        known_tickers = seed_companies(db)
+        seed_portfolios_and_holdings(db, known_tickers)
+        seed_social_impact(db, known_tickers)
+        seed_biodiversity_impact(db, known_tickers)
     finally:
         db.close()
 
