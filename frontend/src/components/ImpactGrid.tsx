@@ -20,13 +20,19 @@ function cellLabel(value: number | null): string {
   return value.toExponential(2);
 }
 
+const keyOf = (v: string | null): string => v ?? "unassigned";
+
 export function ImpactGrid({ cells, rowKeyField, colKeyField }: ImpactGridProps) {
-  const rowKeys = Array.from(new Set(cells.map((c) => c[rowKeyField] as string)));
-  const colKeys = Array.from(new Set(cells.map((c) => c[colKeyField] as string)));
+  if (cells.length === 0) {
+    return <div>No data available</div>;
+  }
+
+  const rowKeys = Array.from(new Set(cells.map((c) => keyOf(c[rowKeyField]))));
+  const colKeys = Array.from(new Set(cells.map((c) => keyOf(c[colKeyField]))));
 
   const lookup = new Map<string, number | null>();
   for (const cell of cells) {
-    lookup.set(`${cell[rowKeyField]}|${cell[colKeyField]}`, cell.value);
+    lookup.set(`${keyOf(cell[rowKeyField])}|${keyOf(cell[colKeyField])}`, cell.value);
   }
 
   return (
