@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import companies, portfolios
+from app.routers import companies, portfolios, scores
 
 app = FastAPI(title="Environmental Impact Dashboard API")
 
@@ -24,3 +24,4 @@ def health():
 
 app.include_router(companies.router)
 app.include_router(portfolios.router)
+app.include_router(scores.router)

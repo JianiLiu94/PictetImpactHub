@@ -129,3 +129,13 @@ def test_compare_portfolios(client_with_portfolio):
 def test_compare_portfolios_invalid_ids(client_with_portfolio):
     response = client_with_portfolio.get("/portfolios/compare", params={"ids": "1,abc"})
     assert response.status_code == 422
+
+
+def test_get_company_scores(client_with_portfolio):
+    response = client_with_portfolio.get("/scores", params={"entity_type": "company"})
+    assert response.status_code == 200
+    body = response.json()
+    tickers = {item["entity_id"] for item in body["items"]}
+    assert tickers == {"ABC", "XYZ"}
+    abc_score = next(item for item in body["items"] if item["entity_id"] == "ABC")
+    assert abc_score["social_score"] == 100.0  # only ABC has social impact, so it ranks highest
