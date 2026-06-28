@@ -1,0 +1,28 @@
+.impact-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.impact-grid__cell {
+  padding: 6px;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.impact-grid__cell--no-data {
+  background-color: #e0e0e0;
+  color: #888;
+}
+
+.impact-grid__cell--positive {
+  background-color: #cdeccd;
+}
+
+.impact-grid__cell--negative {
+  background-color: #f5cccc;
+}
+
+.impact-grid__cell--zero {
+  background-color: #f0f0f0;
+}
