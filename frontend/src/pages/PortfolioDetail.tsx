@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { PaginatedTable } from "../components/PaginatedTable";
 import { ScoreToggle } from "../components/ScoreToggle";
@@ -54,7 +54,7 @@ export function PortfolioDetail() {
         onPageChange={loadHoldingsPage}
         rowKey={(h) => h.ticker}
         columns={[
-          { header: "Company", render: (h) => h.company_name },
+          { header: "Company", render: (h) => <Link to={`/companies/${h.ticker}`}>{h.company_name}</Link> },
           { header: "Weight %", render: (h) => h.pct_of_fund.toFixed(2) },
           { header: "Market value", render: (h) => h.market_value?.toLocaleString() ?? "-" },
         ]}
