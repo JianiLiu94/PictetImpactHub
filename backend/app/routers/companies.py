@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.crud import build_biodiversity_grid, build_social_grid
@@ -10,7 +10,11 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 
 
 @router.get("", response_model=Page[CompanySummary])
-def list_companies(limit: int | None = None, offset: int = 0, db: Session = Depends(get_db)):
+def list_companies(
+    limit: int | None = Query(default=None, ge=0),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
     query = db.query(Company).order_by(Company.ticker)
     total = query.count()
     if limit is not None:
