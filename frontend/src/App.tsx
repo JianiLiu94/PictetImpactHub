@@ -1,7 +1,7 @@
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import { PortfolioSelector } from "./pages/PortfolioSelector";
 import { PortfolioDetail } from "./pages/PortfolioDetail";
-import { PortfolioCompare } from "./pages/PortfolioCompare";
+import { Compare } from "./pages/Compare";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import { CompaniesList } from "./pages/CompaniesList";
 import { Methodology } from "./pages/Methodology";
@@ -39,8 +39,7 @@ function App() {
           <Routes>
             <Route path="/" element={<PortfolioSelector />} />
             <Route path="/portfolios/:id" element={<PortfolioDetail />} />
-            <Route path="/compare" element={<PortfolioCompare />} />
-            <Route path="/portfolios/compare" element={<PortfolioCompare />} />
+            <Route path="/compare" element={<Compare />} />
             <Route path="/companies" element={<CompaniesList />} />
             <Route path="/companies/:ticker" element={<CompanyDetail />} />
             <Route path="/methodology" element={<Methodology />} />
