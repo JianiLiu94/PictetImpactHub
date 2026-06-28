@@ -669,3 +669,49 @@ section + section {
 .tone-bio-bg {
   background: var(--bio);
 }
+
+.entity-picker {
+  margin-bottom: 20px;
+}
+
+.entity-picker__search {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  border: 0.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.entity-picker__list {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 0.5px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.entity-picker__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-bottom: 0.5px solid var(--line-soft);
+  cursor: pointer;
+}
+
+.entity-picker__row:last-child {
+  border-bottom: none;
+}
+
+.entity-picker__meta {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.entity-picker__empty {
+  padding: 10px;
+  font-size: 12px;
+}
