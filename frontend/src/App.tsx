@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
 import { PortfolioSelector } from "./pages/PortfolioSelector";
 import { PortfolioDetail } from "./pages/PortfolioDetail";
+import { PortfolioCompare } from "./pages/PortfolioCompare";
 
 function Placeholder({ label }: { label: string }) {
   return <div>{label} (coming soon)</div>;
@@ -15,7 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<PortfolioSelector />} />
         <Route path="/portfolios/:id" element={<PortfolioDetail />} />
-        <Route path="/portfolios/compare" element={<Placeholder label="Portfolio comparison" />} />
+        <Route path="/portfolios/compare" element={<PortfolioCompare />} />
         <Route path="/companies/:ticker" element={<Placeholder label="Company detail" />} />
       </Routes>
     </BrowserRouter>
