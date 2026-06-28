@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.crud import weighted_portfolio_value
 from app.database import get_db
-from app.models import BiodiversityImpact, Company, Holding, Portfolio, SocialImpact
+from app.models import BiodiversityImpact, Company, Portfolio, SocialImpact
+from app.routers.portfolios import _portfolio_holdings
 from app.schemas import Page, ScoreOut
 from app.scoring import percentile_scores
 
@@ -33,14 +34,16 @@ def get_scores(
         raise HTTPException(status_code=400, detail="entity_type must be 'company' or 'portfolio'")
 
     social_totals, bio_totals = _company_raw_totals(db)
-    all_tickers = {c.ticker for c in db.query(Company).all()}
+    companies = db.query(Company).all()
+    all_tickers = {c.ticker for c in companies}
+    names = {c.ticker: c.company_name for c in companies}
+    # Companies with no impact rows must still appear in the percentile ranking
+    # at 0.0 rather than being silently excluded, so force-include every ticker.
     social_totals = {t: social_totals.get(t, 0.0) for t in all_tickers}
     bio_totals = {t: bio_totals.get(t, 0.0) for t in all_tickers}
 
     company_social_scores = percentile_scores(social_totals)
     company_bio_scores = percentile_scores(bio_totals)
-
-    names = {c.ticker: c.company_name for c in db.query(Company).all()}
 
     if entity_type == "company":
         items = [
@@ -55,10 +58,7 @@ def get_scores(
     else:
         items = []
         for portfolio in db.query(Portfolio).all():
-            holdings = [
-                {"ticker": h.ticker, "pct_of_fund": h.pct_of_fund}
-                for h in db.query(Holding).filter(Holding.portfolio_id == portfolio.id).all()
-            ]
+            holdings = _portfolio_holdings(db, portfolio.id)
             items.append(ScoreOut(
                 entity_id=str(portfolio.id),
                 name=portfolio.name,
