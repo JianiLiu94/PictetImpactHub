@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.database import Base, SessionLocal, engine
 from app.models import BiodiversityImpact, Company, Holding, Portfolio, SocialImpact
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "assignmentInput"
+DATA_DIR = Path(os.environ.get("SEED_DATA_DIR", Path(__file__).resolve().parents[2] / "assignmentInput"))
 
 
 def _read_csv(filename: str) -> pd.DataFrame:

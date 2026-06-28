@@ -15,6 +15,8 @@ services:
     environment:
       DATABASE_URL: postgresql://impact:impact@db:5432/impact
       CORS_ORIGINS: http://localhost:5173
+    volumes:
+      - ./assignmentInput:/assignmentInput:ro
     ports:
       - "8000:8000"
     depends_on:
