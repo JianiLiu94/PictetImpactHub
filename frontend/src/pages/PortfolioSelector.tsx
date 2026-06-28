@@ -15,7 +15,6 @@ function themeIcon(name: string) {
 
 export function PortfolioSelector() {
   const [portfolios, setPortfolios] = useState<PortfolioSummary[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -26,28 +25,18 @@ export function PortfolioSelector() {
       .catch(() => setError("Failed to load portfolios"));
   }, []);
 
-  const toggleSelected = (id: number) => {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
   if (error) return <div className="error-text">{error}</div>;
 
   return (
     <div>
       <h1 className="page-title">Portfolios</h1>
-      <p className="page-sub">Select two or more to compare their impact profiles.</p>
+      <p className="page-sub">Browse portfolios, or head to Compare to compare two or more.</p>
 
       <div className="card-grid">
         {portfolios.map((p) => {
           const theme = themeIcon(p.name);
-          const isSelected = selected.includes(p.id);
           return (
-            <div
-              key={p.id}
-              className="card portfolio-card"
-              onClick={() => navigate(`/portfolios/${p.id}`)}
-              style={isSelected ? { borderColor: "var(--brand)" } : undefined}
-            >
+            <div key={p.id} className="card portfolio-card" onClick={() => navigate(`/portfolios/${p.id}`)}>
               <div className="portfolio-card__head">
                 <div className="theme-icon" style={{ background: theme.bg }}>
                   {theme.icon}
@@ -59,26 +48,9 @@ export function PortfolioSelector() {
                   </div>
                 </div>
               </div>
-              <label
-                style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input type="checkbox" checked={isSelected} onChange={() => toggleSelected(p.id)} />
-                Select for comparison
-              </label>
             </div>
           );
         })}
-      </div>
-
-      <div className="compare-bar">
-        <button
-          className="toggle-btn"
-          disabled={selected.length < 2}
-          onClick={() => navigate(`/compare?ids=${selected.join(",")}`)}
-        >
-          Compare selected
-        </button>
       </div>
     </div>
   );

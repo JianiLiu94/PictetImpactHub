@@ -316,13 +316,6 @@ input[type="checkbox"] {
   color: var(--bio);
 }
 
-.compare-bar {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 /* Split ledger */
 
 .split-ledger {
