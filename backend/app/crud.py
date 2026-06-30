@@ -1,5 +1,9 @@
 from itertools import product
 
+from sqlalchemy.orm import Session
+
+from app.models import BiodiversityImpact, SocialImpact
+
 SOCIAL_SCOPES = ["upstream", "own_ops", "downstream"]
 SOCIAL_CATEGORIES = [
     "connectivity", "employment", "energy", "health", "housing", "income_wealth",
@@ -55,3 +59,16 @@ def weighted_portfolio_value(holdings: list[dict], impact_by_ticker: dict[str, f
             continue
         total += (holding["pct_of_fund"] / 100) * value
     return total
+
+
+def company_raw_impact_totals(db: Session) -> tuple[dict[str, float], dict[str, float]]:
+    """Sum of wellby_abs and value per ticker, across every company in the database."""
+    social_totals: dict[str, float] = {}
+    for row in db.query(SocialImpact).all():
+        social_totals[row.ticker] = social_totals.get(row.ticker, 0.0) + row.wellby_abs
+
+    bio_totals: dict[str, float] = {}
+    for row in db.query(BiodiversityImpact).all():
+        bio_totals[row.ticker] = bio_totals.get(row.ticker, 0.0) + row.value
+
+    return social_totals, bio_totals

@@ -3,6 +3,8 @@ import { useState } from "react";
 interface Column<T> {
   header: string;
   render: (row: T) => React.ReactNode;
+  /** Server-side sort key for this column. Omit to make the column unsortable. */
+  sortKey?: string;
 }
 
 interface PaginatedTableProps<T> {
@@ -12,6 +14,10 @@ interface PaginatedTableProps<T> {
   columns: Column<T>[];
   onPageChange: (offset: number) => void;
   rowKey: (row: T) => string;
+  /** Current sort state and handler -- omit to disable sorting entirely. */
+  sortBy?: string | null;
+  sortDir?: "asc" | "desc";
+  onSort?: (sortKey: string) => void;
 }
 
 export function PaginatedTable<T>({
@@ -21,6 +27,9 @@ export function PaginatedTable<T>({
   columns,
   onPageChange,
   rowKey,
+  sortBy,
+  sortDir = "asc",
+  onSort,
 }: PaginatedTableProps<T>) {
   const [page, setPage] = useState(0);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -37,7 +46,16 @@ export function PaginatedTable<T>({
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.header}>{col.header}</th>
+              <th key={col.header}>
+                {col.sortKey && onSort ? (
+                  <button className="sort-btn" onClick={() => onSort(col.sortKey!)}>
+                    {col.header}
+                    {sortBy === col.sortKey && <span>{sortDir === "asc" ? " ▲" : " ▼"}</span>}
+                  </button>
+                ) : (
+                  col.header
+                )}
+              </th>
             ))}
           </tr>
         </thead>

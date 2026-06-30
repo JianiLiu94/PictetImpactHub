@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { PaginatedTable } from "../components/PaginatedTable";
-import { ScoreToggle } from "../components/ScoreToggle";
 import { CategoryBarList } from "../components/CategoryBarList";
 import { ArrowLeftIcon } from "../components/Icon";
 import { formatAmount, formatNum } from "../format";
@@ -23,15 +22,15 @@ export function PortfolioDetail() {
   const [detail, setDetail] = useState<PortfolioDetailType | null>(null);
   const [holdings, setHoldings] = useState<HoldingOut[]>([]);
   const [holdingsTotal, setHoldingsTotal] = useState(0);
-  const [scores, setScores] = useState<ScoreOut[]>([]);
   const [companyScores, setCompanyScores] = useState<ScoreOut[]>([]);
   const [categories, setCategories] = useState<CategoryBreakdown | null>(null);
   const [scopes, setScopes] = useState<ScopeBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     api.getPortfolio(portfolioId).then(setDetail).catch(() => setError("Failed to load portfolio"));
-    api.getScores("portfolio").then((page) => setScores(page.items)).catch(() => setError("Failed to load scores"));
     api
       .getScores("company")
       .then((page) => setCompanyScores(page.items))
@@ -48,9 +47,9 @@ export function PortfolioDetail() {
 
   const scoreByTicker = new Map(companyScores.map((s) => [s.entity_id, s]));
 
-  const loadHoldingsPage = (offset: number) => {
+  const loadHoldingsPage = (offset: number, sortByOverride = sortBy, sortDirOverride = sortDir) => {
     api
-      .getPortfolioCompanies(portfolioId, PAGE_SIZE, offset)
+      .getPortfolioCompanies(portfolioId, PAGE_SIZE, offset, sortByOverride ?? undefined, sortDirOverride)
       .then((page) => {
         setHoldings(page.items);
         setHoldingsTotal(page.total);
@@ -60,7 +59,15 @@ export function PortfolioDetail() {
 
   useEffect(() => {
     loadHoldingsPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [portfolioId]);
+
+  const handleSort = (key: string) => {
+    const nextDir = sortBy === key && sortDir === "asc" ? "desc" : "asc";
+    setSortBy(key);
+    setSortDir(nextDir);
+    loadHoldingsPage(0, key, nextDir);
+  };
 
   if (error) return <div className="error-text">{error}</div>;
   if (!detail) return <div className="muted">Loading...</div>;
@@ -132,27 +139,41 @@ export function PortfolioDetail() {
         <h2>Holdings</h2>
         <div className="table-wrap">
           <PaginatedTable
+            key={`${sortBy}-${sortDir}`}
             rows={holdings}
             total={holdingsTotal}
             pageSize={PAGE_SIZE}
-            onPageChange={loadHoldingsPage}
+            onPageChange={(offset) => loadHoldingsPage(offset)}
             rowKey={(h) => h.ticker}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSort={handleSort}
             columns={[
-              { header: "Company", render: (h) => <Link to={`/companies/${h.ticker}`}>{h.company_name}</Link> },
-              { header: "Weight %", render: (h) => formatNum(h.pct_of_fund) },
-              { header: "Market value", render: (h) => (h.market_value !== null ? formatAmount(h.market_value) : "-") },
               {
-                header: "WELLBY",
+                header: "Company",
+                sortKey: "company_name",
+                render: (h) => <Link to={`/companies/${h.ticker}`}>{h.company_name}</Link>,
+              },
+              { header: "Weight %", sortKey: "pct_of_fund", render: (h) => formatNum(h.pct_of_fund) },
+              {
+                header: "Market value",
+                sortKey: "market_value",
+                render: (h) => (h.market_value !== null ? formatAmount(h.market_value) : "-"),
+              },
+              {
+                header: "Social impact · WELLBY",
+                sortKey: "social_score",
                 render: (h) => {
                   const s = scoreByTicker.get(h.ticker);
-                  return s ? <span className="tone-social">{formatNum(s.social_score)}</span> : "-";
+                  return s ? <span className="tone-social">{s.social_impact.toExponential(2)}</span> : "-";
                 },
               },
               {
-                header: "PDF·yr",
+                header: "Biodiversity impact · PDF·yr",
+                sortKey: "biodiversity_score",
                 render: (h) => {
                   const s = scoreByTicker.get(h.ticker);
-                  return s ? <span className="tone-bio">{formatNum(s.biodiversity_score)}</span> : "-";
+                  return s ? <span className="tone-bio">{s.biodiversity_impact.toExponential(2)}</span> : "-";
                 },
               },
             ]}
@@ -160,10 +181,6 @@ export function PortfolioDetail() {
         </div>
       </section>
 
-      <section>
-        <h2>Composite score</h2>
-        <ScoreToggle scores={scores} />
-      </section>
     </div>
   );
 }

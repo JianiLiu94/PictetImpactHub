@@ -38,4 +38,37 @@ describe("EntityPicker", () => {
     fireEvent.click(checkboxes[1]);
     expect(onToggle).toHaveBeenCalledWith("2");
   });
+
+  it("supports keyboard navigation: ArrowDown moves the highlighted row, Enter toggles it", () => {
+    const onToggle = vi.fn();
+    render(<EntityPicker items={items} selected={[]} onToggle={onToggle} />);
+
+    const input = screen.getByPlaceholderText("Search...");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onToggle).toHaveBeenCalledWith("2");
+  });
+
+  it("resets the highlighted row to the top whenever the filter changes", () => {
+    const onToggle = vi.fn();
+    render(<EntityPicker items={items} selected={[]} onToggle={onToggle} />);
+
+    const input = screen.getByPlaceholderText("Search...");
+    fireEvent.keyDown(input, { key: "ArrowDown" }); // highlight moves to index 1 ("AI & Automation")
+    fireEvent.change(input, { target: { value: "cleaner" } }); // filter narrows to just "Cleaner Planet"
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onToggle).toHaveBeenCalledWith("1");
+  });
+
+  it("clears the query on Escape", () => {
+    render(<EntityPicker items={items} selected={[]} onToggle={() => {}} />);
+
+    const input = screen.getByPlaceholderText("Search...") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "cleaner" } });
+    fireEvent.keyDown(input, { key: "Escape" });
+
+    expect(input.value).toBe("");
+  });
 });

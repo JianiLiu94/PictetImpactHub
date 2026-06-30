@@ -1,26 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.crud import weighted_portfolio_value
+from app.crud import company_raw_impact_totals, weighted_portfolio_value
 from app.database import get_db
-from app.models import BiodiversityImpact, Company, Portfolio, SocialImpact
+from app.models import Company, Portfolio
 from app.routers.portfolios import _portfolio_holdings
 from app.schemas import Page, ScoreOut
 from app.scoring import percentile_scores
 
 router = APIRouter(prefix="/scores", tags=["scores"])
-
-
-def _company_raw_totals(db: Session) -> tuple[dict[str, float], dict[str, float]]:
-    social_totals: dict[str, float] = {}
-    for row in db.query(SocialImpact).all():
-        social_totals[row.ticker] = social_totals.get(row.ticker, 0.0) + row.wellby_abs
-
-    bio_totals: dict[str, float] = {}
-    for row in db.query(BiodiversityImpact).all():
-        bio_totals[row.ticker] = bio_totals.get(row.ticker, 0.0) + row.value
-
-    return social_totals, bio_totals
 
 
 @router.get("", response_model=Page[ScoreOut])
@@ -33,7 +21,7 @@ def get_scores(
     if entity_type not in ("company", "portfolio"):
         raise HTTPException(status_code=400, detail="entity_type must be 'company' or 'portfolio'")
 
-    social_totals, bio_totals = _company_raw_totals(db)
+    social_totals, bio_totals = company_raw_impact_totals(db)
     companies = db.query(Company).all()
     all_tickers = {c.ticker for c in companies}
     names = {c.ticker: c.company_name for c in companies}
@@ -52,6 +40,8 @@ def get_scores(
                 name=names.get(ticker, ticker),
                 social_score=company_social_scores[ticker],
                 biodiversity_score=company_bio_scores[ticker],
+                social_impact=social_totals[ticker],
+                biodiversity_impact=bio_totals[ticker],
             )
             for ticker in all_tickers
         ]
@@ -64,6 +54,8 @@ def get_scores(
                 name=portfolio.name,
                 social_score=weighted_portfolio_value(holdings, company_social_scores),
                 biodiversity_score=weighted_portfolio_value(holdings, company_bio_scores),
+                social_impact=weighted_portfolio_value(holdings, social_totals),
+                biodiversity_impact=weighted_portfolio_value(holdings, bio_totals),
             ))
 
     items.sort(key=lambda x: x.entity_id)

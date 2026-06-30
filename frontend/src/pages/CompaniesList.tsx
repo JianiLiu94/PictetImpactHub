@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import { Autocomplete } from "../components/Autocomplete";
+import type { AutocompleteItem } from "../components/Autocomplete";
 import { Avatar } from "../components/Avatar";
 import { ChevronDownIcon, ChevronUpIcon } from "../components/Icon";
-import { formatAmount, formatNum } from "../format";
+import { formatAmount } from "../format";
 import type { CompanySummary, ScoreOut } from "../types";
 
 type SortKey = "name" | "market_cap" | "social" | "biodiversity";
@@ -12,11 +14,12 @@ interface Row {
   ticker: string;
   company_name: string;
   market_cap_usd_m: number | null;
-  social_score: number | null;
-  biodiversity_score: number | null;
+  social_impact: number | null;
+  biodiversity_impact: number | null;
 }
 
 export function CompaniesList() {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState<CompanySummary[]>([]);
   const [scores, setScores] = useState<ScoreOut[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +45,16 @@ export function CompaniesList() {
         ticker: c.ticker,
         company_name: c.company_name,
         market_cap_usd_m: c.market_cap_usd_m,
-        social_score: s ? s.social_score : null,
-        biodiversity_score: s ? s.biodiversity_score : null,
+        social_impact: s ? s.social_impact : null,
+        biodiversity_impact: s ? s.biodiversity_impact : null,
       };
     });
   }, [companies, scores]);
+
+  const autocompleteItems: AutocompleteItem[] = useMemo(
+    () => companies.map((c) => ({ id: c.ticker, label: c.company_name, meta: c.ticker })),
+    [companies]
+  );
 
   const sorted = useMemo(() => {
     const withFallback = (v: number | null) => (v === null ? -Infinity : v);
@@ -55,8 +63,8 @@ export function CompaniesList() {
       let diff = 0;
       if (sortKey === "name") diff = a.company_name.localeCompare(b.company_name);
       else if (sortKey === "market_cap") diff = withFallback(a.market_cap_usd_m) - withFallback(b.market_cap_usd_m);
-      else if (sortKey === "social") diff = withFallback(a.social_score) - withFallback(b.social_score);
-      else diff = withFallback(a.biodiversity_score) - withFallback(b.biodiversity_score);
+      else if (sortKey === "social") diff = withFallback(a.social_impact) - withFallback(b.social_impact);
+      else diff = withFallback(a.biodiversity_impact) - withFallback(b.biodiversity_impact);
       return sortDir === "asc" ? diff : -diff;
     });
     return copy;
@@ -87,8 +95,16 @@ export function CompaniesList() {
         </span>
       </div>
 
+      <Autocomplete
+        items={autocompleteItems}
+        placeholder="Search companies..."
+        onSelect={(item) => navigate(`/companies/${item.id}`)}
+      />
+
       <p className="muted" style={{ fontSize: 11, marginBottom: 8 }}>
-        Click a column header to sort. Row click opens the company detail page.
+        Click a column header to sort. Row click opens the company detail page. Social and
+        biodiversity columns show raw impact totals (WELLBY / PDF&middot;yr), not percentile
+        scores &mdash; see the company page for scores.
       </p>
 
       <div className="table-wrap">
@@ -107,12 +123,12 @@ export function CompaniesList() {
               </th>
               <th className="tone-social">
                 <button className="sort-btn" onClick={() => toggleSort("social")}>
-                  WELLBY {sortIcon("social")}
+                  Social impact &middot; WELLBY {sortIcon("social")}
                 </button>
               </th>
               <th className="tone-bio">
                 <button className="sort-btn" onClick={() => toggleSort("biodiversity")}>
-                  PDF&middot;yr {sortIcon("biodiversity")}
+                  Biodiversity impact &middot; PDF&middot;yr {sortIcon("biodiversity")}
                 </button>
               </th>
             </tr>
@@ -130,15 +146,10 @@ export function CompaniesList() {
                   {row.market_cap_usd_m !== null ? `$${formatAmount(row.market_cap_usd_m)}M` : "-"}
                 </td>
                 <td className="num tone-social">
-                  {row.social_score !== null ? formatNum(row.social_score) : "-"}
-                  {row.social_score !== null && (
-                    <span className="score-bar" style={{ background: "var(--social-soft)" }}>
-                      <span style={{ width: `${row.social_score}%`, background: "var(--social)" }} />
-                    </span>
-                  )}
+                  {row.social_impact !== null ? row.social_impact.toExponential(2) : "-"}
                 </td>
                 <td className="num tone-bio">
-                  {row.biodiversity_score !== null ? formatNum(row.biodiversity_score) : "-"}
+                  {row.biodiversity_impact !== null ? row.biodiversity_impact.toExponential(2) : "-"}
                 </td>
               </tr>
             ))}

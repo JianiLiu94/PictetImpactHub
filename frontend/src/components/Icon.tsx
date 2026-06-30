@@ -21,6 +21,15 @@ export function GridIcon({ size = 15 }: IconProps) {
   );
 }
 
+export function UploadIcon({ size = 15 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </svg>
+  );
+}
+
 export function BuildingIcon({ size = 15 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
@@ -274,6 +283,39 @@ export function WaterStressIcon({ size = 14 }: IconProps) {
     <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
       <path d="M12 3c3 4 6 7.4 6 11a6 6 0 0 1-12 0c0-3.6 3-7 6-11z" />
       <path d="M3 21l3-2.5L9 21l3-2.5L15 21l3-2.5 3 2.5" />
+    </svg>
+  );
+}
+
+export function ChevronLeftIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+export function CodeIcon({ size = 15 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <path d="M9 6 3 12l6 6M15 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+export function MailIcon({ size = 15 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...base} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="1.5" />
+      <path d="M4 6.5 12 13l8-6.5" />
     </svg>
   );
 }

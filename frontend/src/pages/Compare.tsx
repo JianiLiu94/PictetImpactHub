@@ -135,13 +135,13 @@ export function Compare() {
                 </div>
                 <div className="split-ledger">
                   <div className="split-ledger__panel">
-                    <div className="split-ledger__label tone-social">SOCIAL</div>
+                    <div className="split-ledger__label tone-social">SOCIAL IMPACT &middot; WELLBY</div>
                     <div className="split-ledger__value" style={{ fontSize: 15 }}>
                       {p.impact.social_total_wellby.toExponential(2)}
                     </div>
                   </div>
                   <div className="split-ledger__panel">
-                    <div className="split-ledger__label tone-bio">BIODIVERSITY</div>
+                    <div className="split-ledger__label tone-bio">BIODIVERSITY IMPACT &middot; PDF&middot;YR</div>
                     <div className="split-ledger__value" style={{ fontSize: 15 }}>
                       {p.impact.biodiversity_total_pdf_yr.toExponential(2)}
                     </div>
@@ -151,7 +151,7 @@ export function Compare() {
             ))}
           </div>
           <section>
-            <h2>Composite scores</h2>
+            <h2>Scores</h2>
             <ScoreToggle scores={scores} />
           </section>
         </>
@@ -171,13 +171,13 @@ export function Compare() {
                 </div>
                 <div className="split-ledger">
                   <div className="split-ledger__panel">
-                    <div className="split-ledger__label tone-social">SOCIAL</div>
+                    <div className="split-ledger__label tone-social">SOCIAL IMPACT &middot; WELLBY</div>
                     <div className="split-ledger__value" style={{ fontSize: 15 }}>
                       {c.social_total.toExponential(2)}
                     </div>
                   </div>
                   <div className="split-ledger__panel">
-                    <div className="split-ledger__label tone-bio">BIODIVERSITY</div>
+                    <div className="split-ledger__label tone-bio">BIODIVERSITY IMPACT &middot; PDF&middot;YR</div>
                     <div className="split-ledger__value" style={{ fontSize: 15 }}>
                       {c.biodiversity_total.toExponential(2)}
                     </div>
@@ -187,7 +187,7 @@ export function Compare() {
             ))}
           </div>
           <section>
-            <h2>Composite scores</h2>
+            <h2>Scores</h2>
             <ScoreToggle scores={scores} />
           </section>
         </>

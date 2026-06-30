@@ -61,6 +61,8 @@ class ScoreOut(BaseModel):
     name: str
     social_score: float
     biodiversity_score: float
+    social_impact: float
+    biodiversity_impact: float
 
 
 class CategoryValue(BaseModel):
@@ -81,3 +83,26 @@ class ScopeValue(BaseModel):
 class ScopeBreakdown(BaseModel):
     social: list[ScopeValue]
     biodiversity: list[ScopeValue]
+
+
+class CustomHoldingIn(BaseModel):
+    isin: str
+    weight: float
+
+
+class CustomHoldingOut(BaseModel):
+    isin: str
+    ticker: str
+    company_name: str
+    pct_of_fund: float
+
+
+class CustomPortfolioResult(BaseModel):
+    n_companies: int
+    total_weight_input: float
+    matched_weight: float
+    missing_isins: list[str]
+    holdings: list[CustomHoldingOut]
+    impact: ImpactSummary
+    social_score: float
+    biodiversity_score: float

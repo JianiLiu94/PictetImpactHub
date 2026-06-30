@@ -2,6 +2,8 @@ import type {
   CategoryBreakdown,
   CompanyDetail,
   CompanySummary,
+  CustomHoldingIn,
+  CustomPortfolioResult,
   HoldingOut,
   Page,
   PortfolioDetail,
@@ -10,12 +12,25 @@ import type {
   ScoreOut,
 } from "../types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`);
   if (!response.ok) {
     throw new Error(`Request to ${path} failed with status ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null);
+    throw new Error(detail?.detail || `Request to ${path} failed with status ${response.status}`);
   }
   return response.json() as Promise<T>;
 }
@@ -26,8 +41,18 @@ export const api = {
   getPortfolio: (id: number) => request<PortfolioDetail>(`/portfolios/${id}`),
   getPortfolioCategories: (id: number) => request<CategoryBreakdown>(`/portfolios/${id}/categories`),
   getPortfolioScopes: (id: number) => request<ScopeBreakdown>(`/portfolios/${id}/scopes`),
-  getPortfolioCompanies: (id: number, limit?: number, offset = 0) =>
-    request<Page<HoldingOut>>(`/portfolios/${id}/companies?${limit ? `limit=${limit}&` : ""}offset=${offset}`),
+  getPortfolioCompanies: (
+    id: number,
+    limit?: number,
+    offset = 0,
+    sortBy?: string,
+    sortDir: "asc" | "desc" = "asc"
+  ) =>
+    request<Page<HoldingOut>>(
+      `/portfolios/${id}/companies?${limit ? `limit=${limit}&` : ""}offset=${offset}${
+        sortBy ? `&sort_by=${sortBy}&sort_dir=${sortDir}` : ""
+      }`
+    ),
   comparePortfolios: (ids: number[]) =>
     request<PortfolioDetail[]>(`/portfolios/compare?ids=${ids.join(",")}`),
   listCompanies: (limit?: number, offset = 0) =>
@@ -35,4 +60,6 @@ export const api = {
   getCompany: (ticker: string) => request<CompanyDetail>(`/companies/${ticker}`),
   getScores: (entityType: "company" | "portfolio") =>
     request<Page<ScoreOut>>(`/scores?entity_type=${entityType}`),
+  buildCustomPortfolio: (holdings: CustomHoldingIn[]) =>
+    post<CustomPortfolioResult>("/portfolios/custom", holdings),
 };

@@ -24,7 +24,7 @@ export function ThemeToggle() {
       aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
     >
       {theme === "light" ? <MoonIcon /> : <SunIcon />}
-      {theme === "light" ? "Dark mode" : "Light mode"}
+      <span>{theme === "light" ? "Dark mode" : "Light mode"}</span>
     </button>
   );
 }

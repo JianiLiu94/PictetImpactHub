@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 
@@ -7,15 +6,16 @@ from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app.config import SEED_DATA_DIR, SEED_FILE_BIODIVERSITY, SEED_FILE_FINANCIAL, SEED_FILE_HOLDINGS, SEED_FILE_SOCIAL
 from app.database import Base, SessionLocal, engine
 from app.models import BiodiversityImpact, Company, Holding, Portfolio, SocialImpact
 
-DATA_DIR = Path(os.environ.get("SEED_DATA_DIR", Path(__file__).resolve().parents[2] / "assignmentInput"))
+DATA_DIR = SEED_DATA_DIR
 
 
 def _read_csv(filename: str) -> pd.DataFrame:
     path = DATA_DIR / filename
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, thousands=",")
     before = len(df)
     df = df.dropna(how="all")
     skipped = before - len(df)
@@ -25,7 +25,7 @@ def _read_csv(filename: str) -> pd.DataFrame:
 
 
 def seed_companies(db: Session) -> set:
-    fin = _read_csv("financial_data.csv")
+    fin = _read_csv(SEED_FILE_FINANCIAL)
     bad_rows = 0
     seeded_tickers = set()
     for _, row in fin.iterrows():
@@ -50,7 +50,7 @@ def seed_companies(db: Session) -> set:
 
 
 def seed_portfolios_and_holdings(db: Session, known_tickers: set) -> None:
-    holdings = _read_csv("port_holdings_combined_assumed.csv")
+    holdings = _read_csv(SEED_FILE_HOLDINGS)
     portfolio_names = holdings["portfolio"].dropna().unique().tolist()
     name_to_id = {}
     for name in portfolio_names:
@@ -84,7 +84,7 @@ def seed_portfolios_and_holdings(db: Session, known_tickers: set) -> None:
 
 
 def seed_social_impact(db: Session, known_tickers: set) -> None:
-    social = _read_csv("social_impact_model_output_assumed.csv")
+    social = _read_csv(SEED_FILE_SOCIAL)
     required_fields = [
         "ticker",
         "scope",
@@ -116,7 +116,7 @@ def seed_social_impact(db: Session, known_tickers: set) -> None:
 
 
 def seed_biodiversity_impact(db: Session, known_tickers: set) -> None:
-    bio = _read_csv("biodiversity_model_output.csv")
+    bio = _read_csv(SEED_FILE_BIODIVERSITY)
     required_fields = ["ticker", "scope", "category", "value"]
     bad_rows = 0
     for _, row in bio.iterrows():

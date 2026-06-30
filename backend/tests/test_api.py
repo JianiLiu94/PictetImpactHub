@@ -184,3 +184,108 @@ def test_get_portfolio_scopes(client_with_portfolio):
 
     direct = next(s for s in body["biodiversity"] if s["scope"] == "direct")
     assert direct["value"] == 0.6 * -2.0
+
+
+def test_get_portfolio_companies_sort_by_market_value(client_with_portfolio):
+    asc = client_with_portfolio.get("/portfolios/1/companies", params={"sort_by": "market_value", "sort_dir": "asc"})
+    assert asc.status_code == 200
+    assert [h["ticker"] for h in asc.json()["items"]] == ["XYZ", "ABC"]
+
+    desc = client_with_portfolio.get(
+        "/portfolios/1/companies", params={"sort_by": "market_value", "sort_dir": "desc"}
+    )
+    assert [h["ticker"] for h in desc.json()["items"]] == ["ABC", "XYZ"]
+
+
+def test_get_portfolio_companies_sort_by_company_name(client_with_portfolio):
+    response = client_with_portfolio.get("/portfolios/1/companies", params={"sort_by": "company_name"})
+    assert response.status_code == 200
+    # "ABC Corp" sorts before "XYZ Inc" alphabetically
+    assert [h["ticker"] for h in response.json()["items"]] == ["ABC", "XYZ"]
+
+
+def test_get_portfolio_companies_sort_by_social_score(client_with_portfolio):
+    # ABC has a social impact row (wellby_abs=5.0), XYZ has none (raw total 0.0),
+    # so ABC ranks at the 100th percentile and XYZ at the 0th.
+    desc = client_with_portfolio.get(
+        "/portfolios/1/companies", params={"sort_by": "social_score", "sort_dir": "desc"}
+    )
+    assert [h["ticker"] for h in desc.json()["items"]] == ["ABC", "XYZ"]
+
+    asc = client_with_portfolio.get("/portfolios/1/companies", params={"sort_by": "social_score", "sort_dir": "asc"})
+    assert [h["ticker"] for h in asc.json()["items"]] == ["XYZ", "ABC"]
+
+
+def test_get_portfolio_companies_sort_by_biodiversity_score(client_with_portfolio):
+    # ABC's biodiversity value is -2.0 (a real loss), XYZ has none (raw total 0.0,
+    # i.e. "less negative" than ABC), so XYZ ranks higher on this axis.
+    desc = client_with_portfolio.get(
+        "/portfolios/1/companies", params={"sort_by": "biodiversity_score", "sort_dir": "desc"}
+    )
+    assert [h["ticker"] for h in desc.json()["items"]] == ["XYZ", "ABC"]
+
+
+def test_get_portfolio_companies_invalid_sort_by(client_with_portfolio):
+    response = client_with_portfolio.get("/portfolios/1/companies", params={"sort_by": "not_a_field"})
+    assert response.status_code == 400
+
+
+def test_get_portfolio_companies_invalid_sort_dir(client_with_portfolio):
+    response = client_with_portfolio.get(
+        "/portfolios/1/companies", params={"sort_by": "market_value", "sort_dir": "sideways"}
+    )
+    assert response.status_code == 400
+
+
+def test_build_custom_portfolio(client_with_portfolio):
+    response = client_with_portfolio.post(
+        "/portfolios/custom",
+        json=[
+            {"isin": "US0000000000", "weight": 60.0},
+            {"isin": "US0000000001", "weight": 40.0},
+        ],
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["n_companies"] == 2
+    assert body["missing_isins"] == []
+    assert body["total_weight_input"] == 100.0
+    assert body["matched_weight"] == 100.0
+    assert body["impact"]["social_total_wellby"] == 0.6 * 5.0
+    assert body["impact"]["biodiversity_total_pdf_yr"] == 0.6 * -2.0
+    assert body["social_score"] == 0.6 * 100.0  # ABC scores 100, XYZ 0, weighted 60/40
+
+
+def test_build_custom_portfolio_handles_missing_isins(client_with_portfolio):
+    response = client_with_portfolio.post(
+        "/portfolios/custom",
+        json=[
+            {"isin": "US0000000000", "weight": 50.0},
+            {"isin": "US-DOES-NOT-EXIST", "weight": 50.0},
+        ],
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["n_companies"] == 1
+    assert body["missing_isins"] == ["US-DOES-NOT-EXIST"]
+    assert body["total_weight_input"] == 100.0
+    assert body["matched_weight"] == 50.0
+    # the single matched holding (ABC) is renormalized to 100% of the matched portfolio
+    assert body["holdings"][0]["pct_of_fund"] == 100.0
+    assert body["social_score"] == 100.0
+
+
+def test_build_custom_portfolio_all_missing(client_with_portfolio):
+    response = client_with_portfolio.post(
+        "/portfolios/custom",
+        json=[{"isin": "US-NOPE-1", "weight": 100.0}],
+    )
+    assert response.status_code == 400
+
+
+def test_build_custom_portfolio_rejects_non_positive_weight(client_with_portfolio):
+    response = client_with_portfolio.post(
+        "/portfolios/custom",
+        json=[{"isin": "US0000000000", "weight": 0}],
+    )
+    assert response.status_code == 422

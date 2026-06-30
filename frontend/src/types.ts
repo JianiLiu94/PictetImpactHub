@@ -47,6 +47,8 @@ export interface ScoreOut {
   name: string;
   social_score: number;
   biodiversity_score: number;
+  social_impact: number;
+  biodiversity_impact: number;
 }
 
 export interface CategoryValue {
@@ -67,6 +69,29 @@ export interface ScopeValue {
 export interface ScopeBreakdown {
   social: ScopeValue[];
   biodiversity: ScopeValue[];
+}
+
+export interface CustomHoldingIn {
+  isin: string;
+  weight: number;
+}
+
+export interface CustomHoldingOut {
+  isin: string;
+  ticker: string;
+  company_name: string;
+  pct_of_fund: number;
+}
+
+export interface CustomPortfolioResult {
+  n_companies: number;
+  total_weight_input: number;
+  matched_weight: number;
+  missing_isins: string[];
+  holdings: CustomHoldingOut[];
+  impact: ImpactSummary;
+  social_score: number;
+  biodiversity_score: number;
 }
 
 export interface Page<T> {

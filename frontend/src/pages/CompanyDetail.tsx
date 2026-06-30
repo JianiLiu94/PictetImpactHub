@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ImpactGrid } from "../components/ImpactGrid";
-import { ScoreToggle } from "../components/ScoreToggle";
 import { Avatar } from "../components/Avatar";
 import { ArrowLeftIcon } from "../components/Icon";
-import { formatAmount, humanizeLabel } from "../format";
+import { formatAmount, formatNum, humanizeLabel } from "../format";
+import { sumGridValue } from "../gridTotals";
 import type { CompanyDetail as CompanyDetailType, ScoreOut } from "../types";
 
 export function CompanyDetail() {
@@ -24,7 +24,7 @@ export function CompanyDetail() {
   if (error) return <div className="error-text">{error}</div>;
   if (!company) return <div className="muted">Loading...</div>;
 
-  const ownScore = scores.filter((s) => s.entity_id === ticker);
+  const ownScore = scores.find((s) => s.entity_id === ticker);
 
   const stakeholders = Array.from(
     new Set(company.social_grid.map((c) => c.stakeholder).filter((s): s is string => s !== null))
@@ -54,6 +54,25 @@ export function CompanyDetail() {
         </div>
       </div>
 
+      {ownScore && (
+        <div className="split-ledger" style={{ marginTop: 18 }}>
+          <div className="split-ledger__panel">
+            <div className="split-ledger__label tone-social">Social score</div>
+            <div className="split-ledger__value tone-social">{formatNum(ownScore.social_score ?? 0)}</div>
+            <div className="tone-social" style={{ fontSize: 11, fontFamily: "var(--font-mono)", opacity: 0.75, marginTop: 4 }}>
+              Social impact {sumGridValue(company.social_grid).toExponential(2)} WELLBY
+            </div>
+          </div>
+          <div className="split-ledger__panel">
+            <div className="split-ledger__label tone-bio">Biodiversity score</div>
+            <div className="split-ledger__value tone-bio">{formatNum(ownScore.biodiversity_score ?? 0)}</div>
+            <div className="tone-bio" style={{ fontSize: 11, fontFamily: "var(--font-mono)", opacity: 0.75, marginTop: 4 }}>
+              Biodiversity impact {sumGridValue(company.biodiversity_grid).toExponential(2)} PDF&middot;yr
+            </div>
+          </div>
+        </div>
+      )}
+
       <section style={{ marginTop: 18 }}>
         <h2 className="tone-social">Social &middot; WELLBY by stakeholder</h2>
         <div className="card-grid" style={{ gridTemplateColumns: "1fr" }}>
@@ -78,11 +97,6 @@ export function CompanyDetail() {
         <div className="card">
           <ImpactGrid cells={company.biodiversity_grid} rowKeyField="scope" colKeyField="category" tone="bio" />
         </div>
-      </section>
-
-      <section>
-        <h2>Composite score</h2>
-        <ScoreToggle scores={ownScore} />
       </section>
     </div>
   );
