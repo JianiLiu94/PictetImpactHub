@@ -18,21 +18,68 @@ die()   { echo "  [FAIL]  $*" >&2; exit 1; }
 ###############################################################################
 echo
 echo "==> Checking Python..."
+
 PYTHON=""
-for candidate in python3.12 python3 python; do
-  if command -v "$candidate" &>/dev/null; then
-    version=$("$candidate" -c 'import sys; print(sys.version_info[:2])')
-    if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' 2>/dev/null; then
-      PYTHON="$candidate"
-      ok "Using $PYTHON  ($version)"
-      break
-    else
-      info "$candidate found but version $version < (3,12) — skipping"
-    fi
+TRIED=""
+
+# Check one candidate; sets PYTHON and returns 0 on success.
+_try_python() {
+  local cmd="$1"
+  [[ -x "$cmd" ]] || return 1
+  if "$cmd" -c 'import sys; sys.exit(0 if sys.version_info >= (3,12) else 1)' 2>/dev/null; then
+    local ver
+    ver=$("$cmd" -c 'import sys; print(".".join(map(str,sys.version_info[:3])))')
+    PYTHON="$cmd"
+    ok "Using $cmd  ($ver)"
+    return 0
+  else
+    local ver
+    ver=$("$cmd" -c 'import sys; print(".".join(map(str,sys.version_info[:3])))' 2>/dev/null || echo "unknown")
+    info "$cmd  →  $ver  (< 3.12, skipping)"
+    TRIED="$TRIED  $cmd ($ver)\n"
+    return 1
   fi
-done
+}
+
+# 1a. pyenv: walk installed versions directly (avoids shim/PATH issues entirely)
+if command -v pyenv &>/dev/null; then
+  PYENV_ROOT="${PYENV_ROOT:-$(pyenv root 2>/dev/null || echo "$HOME/.pyenv")}"
+  # Glob matches 3.12.x, 3.13.x, 3.14.x etc. — sort -rV puts newest first.
+  for py in "$PYENV_ROOT/versions"/3.*/bin/python3 "$PYENV_ROOT/versions"/3.*/bin/python; do
+    [[ -x "$py" ]] || continue
+    _try_python "$py" && break
+  done
+fi
+
+# 1b. Explicit version-named binaries on PATH
 if [[ -z "$PYTHON" ]]; then
-  die "Python 3.12+ is required but was not found.\n       Install it from https://python.org or via your package manager."
+  for name in python3.14 python3.13 python3.12; do
+    full="$(command -v "$name" 2>/dev/null || true)"
+    [[ -n "$full" ]] && _try_python "$full" && break
+  done
+fi
+
+# 1c. Generic python3 / python on PATH
+if [[ -z "$PYTHON" ]]; then
+  for name in python3 python; do
+    full="$(command -v "$name" 2>/dev/null || true)"
+    [[ -n "$full" ]] && _try_python "$full" && break
+  done
+fi
+
+if [[ -z "$PYTHON" ]]; then
+  echo
+  echo "  Python 3.12+ not found."
+  if [[ -n "$TRIED" ]]; then
+    echo "  Versions tried (all < 3.12):"
+    printf "%b" "$TRIED"
+  fi
+  echo
+  echo "  Install options:"
+  echo "    pyenv install 3.12.10 && pyenv global 3.12.10"
+  echo "    brew install python@3.12"
+  echo "    https://python.org/downloads"
+  die "Python 3.12+ is required."
 fi
 
 ###############################################################################
