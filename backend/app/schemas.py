@@ -85,6 +85,17 @@ class ScopeBreakdown(BaseModel):
     biodiversity: list[ScopeValue]
 
 
+class ScopedCategoryValue(BaseModel):
+    category: str
+    value: float
+    by_scope: list[ScopeValue]
+
+
+class CategoryScopeBreakdown(BaseModel):
+    social: list[ScopedCategoryValue]
+    biodiversity: list[ScopedCategoryValue]
+
+
 class CustomHoldingIn(BaseModel):
     isin: str
     weight: float

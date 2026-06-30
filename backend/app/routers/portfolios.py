@@ -13,6 +13,7 @@ from app.database import get_db
 from app.models import BiodiversityImpact, Company, Holding, Portfolio, SocialImpact
 from app.schemas import (
     CategoryBreakdown,
+    CategoryScopeBreakdown,
     CategoryValue,
     CustomHoldingIn,
     CustomHoldingOut,
@@ -23,6 +24,7 @@ from app.schemas import (
     PortfolioDetail,
     PortfolioSummary,
     ScopeBreakdown,
+    ScopedCategoryValue,
     ScopeValue,
 )
 from app.scoring import percentile_scores
@@ -131,6 +133,41 @@ def _scope_breakdown(db: Session, holdings: list[dict]) -> ScopeBreakdown:
     ]
 
     return ScopeBreakdown(social=social_values, biodiversity=bio_values)
+
+
+def _category_scope_breakdown(db: Session, holdings: list[dict]) -> CategoryScopeBreakdown:
+    """Weighted sum per (category, scope) pair — for category drill-down in the Compare view."""
+    tickers = [h["ticker"] for h in holdings]
+
+    social_data: dict[str, dict[str, dict[str, float]]] = {
+        cat: {scope: {} for scope in SOCIAL_SCOPES} for cat in SOCIAL_CATEGORIES
+    }
+    for row in db.query(SocialImpact).filter(SocialImpact.ticker.in_(tickers)).all():
+        cat_map = social_data.setdefault(row.category, {scope: {} for scope in SOCIAL_SCOPES})
+        ticker_map = cat_map.setdefault(row.scope, {})
+        ticker_map[row.ticker] = ticker_map.get(row.ticker, 0.0) + row.wellby_abs
+
+    bio_data: dict[str, dict[str, dict[str, float]]] = {
+        cat: {scope: {} for scope in BIO_SCOPES} for cat in BIO_CATEGORIES
+    }
+    for row in db.query(BiodiversityImpact).filter(BiodiversityImpact.ticker.in_(tickers)).all():
+        cat_map = bio_data.setdefault(row.category, {scope: {} for scope in BIO_SCOPES})
+        ticker_map = cat_map.setdefault(row.scope, {})
+        ticker_map[row.ticker] = ticker_map.get(row.ticker, 0.0) + row.value
+
+    def build(data: dict[str, dict[str, dict[str, float]]]) -> list[ScopedCategoryValue]:
+        result = []
+        for cat, scope_map in data.items():
+            by_scope = [
+                ScopeValue(scope=scope, value=weighted_portfolio_value(holdings, ticker_map))
+                for scope, ticker_map in scope_map.items()
+            ]
+            total = sum(sv.value for sv in by_scope)
+            result.append(ScopedCategoryValue(category=cat, value=total, by_scope=by_scope))
+        result.sort(key=lambda x: x.value, reverse=True)
+        return result
+
+    return CategoryScopeBreakdown(social=build(social_data), biodiversity=build(bio_data))
 
 
 def _get_portfolio_or_404(db: Session, portfolio_id: int) -> Portfolio:
@@ -274,6 +311,13 @@ def get_portfolio_scopes(portfolio_id: int, db: Session = Depends(get_db)):
     _get_portfolio_or_404(db, portfolio_id)
     holdings = _portfolio_holdings(db, portfolio_id)
     return _scope_breakdown(db, holdings)
+
+
+@router.get("/{portfolio_id}/category-scope-breakdown", response_model=CategoryScopeBreakdown)
+def get_portfolio_category_scope_breakdown(portfolio_id: int, db: Session = Depends(get_db)):
+    _get_portfolio_or_404(db, portfolio_id)
+    holdings = _portfolio_holdings(db, portfolio_id)
+    return _category_scope_breakdown(db, holdings)
 
 
 def _sort_holdings(db: Session, holdings: list[dict], sort_by: str, sort_dir: str) -> list[dict]:

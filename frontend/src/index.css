@@ -729,6 +729,112 @@ section + section {
   background: var(--social);
 }
 
+/* CompareBarList — aligned multi-entity bar comparison */
+
+.compare-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.compare-bar-list__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.compare-bar-list__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.compare-bar-list__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.compare-bar-list__group {
+  border-top: 1px solid var(--line-soft);
+  padding: 10px 0 6px;
+}
+
+.compare-bar-list__cat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.compare-bar-list__cat-label--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.compare-bar-list__cat-label--clickable:hover {
+  opacity: 0.75;
+}
+
+.compare-bar-list__expand-icon {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+.compare-bar-list__drilldown {
+  margin-top: 6px;
+  margin-left: 12px;
+  padding: 8px 10px;
+  background: var(--surface-raised, rgba(0,0,0,0.03));
+  border-radius: 6px;
+  border-left: 2px solid var(--line-soft);
+}
+
+.compare-bar-list__row {
+  display: grid;
+  grid-template-columns: 130px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.compare-bar-list__name {
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-bar-list__track {
+  position: relative;
+  background: var(--line-soft);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.compare-bar-list__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+}
+
+.compare-bar-list__value {
+  text-align: right;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
 .tone-bio-bg {
   background: var(--bio);
 }

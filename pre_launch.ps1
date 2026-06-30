@@ -1,4 +1,4 @@
-# pre_launch.ps1 — one-time setup for a fresh clone on Windows.
+# pre_launch.ps1 - one-time setup for a fresh clone on Windows.
 # Run this once before using run.ps1.
 # Safe to re-run: every step is idempotent.
 #
@@ -27,19 +27,20 @@ Write-Host "==> Checking Python..."
 
 $PYTHON = $null
 foreach ($candidate in @("python3.12", "python3", "python")) {
-    $found = Get-Command $candidate -ErrorAction SilentlyContinue
-    if ($found) {
-        $ok = & $candidate -c "import sys; sys.exit(0 if sys.version_info >= (3,12) else 1)" 2>$null
+    $matches = Get-Command $candidate -All -ErrorAction SilentlyContinue
+    foreach ($found in $matches) {
+        $ok = & $found.Source -c "import sys; sys.exit(0 if sys.version_info >= (3,12) else 1)" 2>$null
         if ($LASTEXITCODE -eq 0) {
-            $version = & $candidate -c "import sys; print(sys.version.split()[0])"
-            $PYTHON = $candidate
+            $version = & $found.Source -c "import sys; print(sys.version.split()[0])"
+            $PYTHON = $found.Source
             Ok "Using $PYTHON  ($version)"
             break
         } else {
-            $version = & $candidate -c "import sys; print(sys.version.split()[0])" 2>$null
-            Info "$candidate found but version $version < 3.12 — skipping"
+            $version = & $found.Source -c "import sys; print(sys.version.split()[0])" 2>$null
+            Info "$($found.Source) found but version $version < 3.12 - skipping"
         }
     }
+    if ($PYTHON) { break }
 }
 if (-not $PYTHON) {
     Die "Python 3.12+ is required but was not found.`n       Install it from https://python.org"
@@ -53,7 +54,7 @@ Write-Host "==> Setting up Python virtual environment..."
 
 $VENV = "backend\.venv"
 if (Test-Path $VENV) {
-    Ok "Virtual environment already exists at $VENV — skipping creation"
+    Ok "Virtual environment already exists at $VENV - skipping creation"
 } else {
     & $PYTHON -m venv $VENV
     Ok "Created virtual environment at $VENV"

@@ -1,5 +1,6 @@
 import type {
   CategoryBreakdown,
+  CategoryScopeBreakdown,
   CompanyDetail,
   CompanySummary,
   CustomHoldingIn,
@@ -41,6 +42,8 @@ export const api = {
   getPortfolio: (id: number) => request<PortfolioDetail>(`/portfolios/${id}`),
   getPortfolioCategories: (id: number) => request<CategoryBreakdown>(`/portfolios/${id}/categories`),
   getPortfolioScopes: (id: number) => request<ScopeBreakdown>(`/portfolios/${id}/scopes`),
+  getPortfolioCategoryScopes: (id: number) =>
+    request<CategoryScopeBreakdown>(`/portfolios/${id}/category-scope-breakdown`),
   getPortfolioCompanies: (
     id: number,
     limit?: number,

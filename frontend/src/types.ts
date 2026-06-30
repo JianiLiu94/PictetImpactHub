@@ -71,6 +71,17 @@ export interface ScopeBreakdown {
   biodiversity: ScopeValue[];
 }
 
+export interface ScopedCategoryValue {
+  category: string;
+  value: number;
+  by_scope: ScopeValue[];
+}
+
+export interface CategoryScopeBreakdown {
+  social: ScopedCategoryValue[];
+  biodiversity: ScopedCategoryValue[];
+}
+
 export interface CustomHoldingIn {
   isin: string;
   weight: number;

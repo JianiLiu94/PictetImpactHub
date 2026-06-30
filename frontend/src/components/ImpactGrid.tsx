@@ -10,6 +10,9 @@ interface ImpactGridProps {
   rowKeyField: "scope" | "category";
   colKeyField: "scope" | "category" | "stakeholder";
   tone?: "social" | "bio";
+  /** Override the max-abs used for heat scaling — set to a shared value across
+   *  multiple grids so their intensities are directly comparable. */
+  maxAbsOverride?: number;
 }
 
 const SUM_KEY = "__sum__";
@@ -63,7 +66,7 @@ function maxOf(values: number[]): number | null {
   return values.length === 0 ? null : Math.max(...values);
 }
 
-export function ImpactGrid({ cells, rowKeyField, colKeyField, tone }: ImpactGridProps) {
+export function ImpactGrid({ cells, rowKeyField, colKeyField, tone, maxAbsOverride }: ImpactGridProps) {
   if (cells.length === 0) {
     return <div>No data available</div>;
   }
@@ -99,7 +102,7 @@ export function ImpactGrid({ cells, rowKeyField, colKeyField, tone }: ImpactGrid
   const allRowKeys = [...rowKeys, ...AGG_KEYS];
   const allColKeys = [...colKeys, ...AGG_KEYS];
 
-  const maxAbs = Math.max(0, ...allValues.map((v) => Math.abs(v)));
+  const maxAbs = maxAbsOverride ?? Math.max(0, ...allValues.map((v) => Math.abs(v)));
   const colors = tone ? TONE_COLORS[tone] : null;
 
   const heatStyle = (value: number | null): React.CSSProperties | undefined => {
