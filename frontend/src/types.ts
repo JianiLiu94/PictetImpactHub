@@ -71,10 +71,25 @@ export interface ScopeBreakdown {
   biodiversity: ScopeValue[];
 }
 
+export interface StakeholderValue {
+  stakeholder: string;
+  value: number;
+}
+
+export interface StakeholderBreakdown {
+  social: StakeholderValue[];
+}
+
+export interface ScopeStakeholderValue {
+  scope: string;
+  value: number;
+  by_stakeholder: StakeholderValue[];
+}
+
 export interface ScopedCategoryValue {
   category: string;
   value: number;
-  by_scope: ScopeValue[];
+  by_scope: ScopeStakeholderValue[];
 }
 
 export interface CategoryScopeBreakdown {

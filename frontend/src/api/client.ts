@@ -11,6 +11,7 @@ import type {
   PortfolioSummary,
   ScopeBreakdown,
   ScoreOut,
+  StakeholderBreakdown,
 } from "../types";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -44,6 +45,8 @@ export const api = {
   getPortfolioScopes: (id: number) => request<ScopeBreakdown>(`/portfolios/${id}/scopes`),
   getPortfolioCategoryScopes: (id: number) =>
     request<CategoryScopeBreakdown>(`/portfolios/${id}/category-scope-breakdown`),
+  getPortfolioStakeholders: (id: number) =>
+    request<StakeholderBreakdown>(`/portfolios/${id}/stakeholders`),
   getPortfolioCompanies: (
     id: number,
     limit?: number,

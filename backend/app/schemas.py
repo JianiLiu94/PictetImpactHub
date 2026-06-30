@@ -85,10 +85,25 @@ class ScopeBreakdown(BaseModel):
     biodiversity: list[ScopeValue]
 
 
+class StakeholderValue(BaseModel):
+    stakeholder: str
+    value: float
+
+
+class StakeholderBreakdown(BaseModel):
+    social: list[StakeholderValue]
+
+
+class ScopeStakeholderValue(BaseModel):
+    scope: str
+    value: float
+    by_stakeholder: list[StakeholderValue] = []
+
+
 class ScopedCategoryValue(BaseModel):
     category: str
     value: float
-    by_scope: list[ScopeValue]
+    by_scope: list[ScopeStakeholderValue]
 
 
 class CategoryScopeBreakdown(BaseModel):
